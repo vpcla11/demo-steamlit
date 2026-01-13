@@ -100,10 +100,10 @@ else:
 
         if "auth_uri" in flow:
             st.info(" Redirecting to Microsoft sign-in...")
-            st.components.v1.html(f"""
-                <script>
-                    window.top.location.href = "{flow['auth_uri']}";
-                </script>
-            """, height=0)
+            st.markdown(f"""
+                <meta http-equiv="refresh" content="0; url={flow['auth_uri']}">
+                <p>🔄 Redirecting to Microsoft sign-in...</p>
+                <p>If you're not redirected, <a href="{flow['auth_uri']}">click here</a></p>
+            """, unsafe_allow_html=True)
         else:
             st.error("Failed to initiate authentication flow")
