@@ -1,6 +1,5 @@
 import msal
 import streamlit as st
-import requests
 import pickle
 import base64
 from streamlit.logger import get_logger
@@ -22,13 +21,14 @@ def build_app():
         client_credential=CLIENT_SECRET
     )
 
+
 @st.cache_resource
 def get_flow_store():
     """Process-wide cache for flows (keyed by state)"""
     return {}
 
-# Encode flow to pass via query param (workaround)
-def encode_flow(flow):
+
+def encode_flow(flow) -> str:
     return base64.urlsafe_b64encode(pickle.dumps(flow)).decode()
 
 
@@ -73,7 +73,7 @@ else:
                     st.error(f"Sign-in error: {result.get('error_description')}")
                     st.info(f"DEBUG: Error details: {result}")
                 else:
-                    st.info(f"DEBUG: Token acquired successfully")
+                    st.info(f"DEBUG: Token acquired successfully {result}")
                     st.session_state["token"] = result
                     st.query_params.clear()
                     st.rerun()
@@ -98,7 +98,19 @@ else:
             st.info(f"DEBUG: Created new flow with state={state}")
 
         if "auth_uri" in flow:
-            st.link_button("Sign in with Microsoft", flow["auth_uri"])
+            st.markdown(f"""
+                <form action="{flow['auth_uri']}" method="get" target="_self">
+                    <button type="submit" style="
+                        padding: 0.5rem 1rem;
+                        background-color: #0078d4;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 16px;
+                    ">Sign in with Microsoft</button>
+                </form>
+            """, unsafe_allow_html=True)
             st.caption("You'll be redirected back here after sign-in.")
         else:
             st.error("Failed to initiate authentication flow")
