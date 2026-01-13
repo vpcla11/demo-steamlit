@@ -99,17 +99,8 @@ else:
             st.info(f"DEBUG: Created new flow with state={state}")
 
         if "auth_uri" in flow:
-            # Force a full page redirect using JavaScript before Streamlit iframe loads
-            st.markdown(f"""
-                <script type="text/javascript">
-                    window.location.href = "{flow['auth_uri']}";
-                </script>
-                <noscript>
-                    <meta http-equiv="refresh" content="0;url={flow['auth_uri']}">
-                </noscript>
-                <p>🔄 Redirecting to Microsoft sign-in...</p>
-                <p>If you're not redirected, <a href="{flow['auth_uri']}" target="_top">click here</a></p>
-            """, unsafe_allow_html=True)
-            st.stop()  # Prevent further rendering
+            st.info("Click below to sign in with Microsoft:")
+            st.link_button("Sign in with Microsoft", flow['auth_uri'], type="primary")
+            st.caption("You'll be redirected back here after authentication.")
         else:
             st.error("Failed to initiate authentication flow")
