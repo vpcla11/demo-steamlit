@@ -45,14 +45,16 @@ if "token" in st.session_state:
         st.rerun()
 else:
     params = st.query_params
-
+    st.info(f"DEBUG: Processing callback with authorization code {st.session_state}")
     if "code" in params and "flow_data" in params:
         try:
+            st.info(f"DEBUG: acquire_token_by_auth_code_flow {st.session_state}")
             flow = decode_flow(params["flow_data"])
             result = app.acquire_token_by_auth_code_flow(flow, params.to_dict())
             if "error" in result:
                 st.error(f"Sign-in error: {result.get('error_description')}")
             else:
+                st.info(f"DEBUG: acquire_token_by_auth_code_flow succes {st.session_state}")
                 st.session_state["token"] = result
                 st.query_params.clear()
                 st.rerun()
@@ -60,6 +62,7 @@ else:
             st.error(f"Error: {e}")
     else:
         flow = app.initiate_auth_code_flow(scopes=SCOPES, redirect_uri=REDIRECT_URI)
+        st.info(f"DEBUG: initiate_auth_code_flow {st.session_state}")
         if "auth_uri" in flow:
             # Append encoded flow to auth_uri
             encoded = encode_flow(flow)
