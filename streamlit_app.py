@@ -114,7 +114,6 @@ else:
                     text-align: center;
                 ">Sign in with Microsoft</a>
             """, unsafe_allow_html=True)
-    """, unsafe_allow_html=True)
             st.caption("You'll be redirected back here after sign-in.")
         else:
             st.error("Failed to initiate authentication flow")
