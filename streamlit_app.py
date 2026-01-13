@@ -99,11 +99,6 @@ else:
             st.info(f"DEBUG: Created new flow with state={state}")
 
         if "auth_uri" in flow:
-            st.info(" Redirecting to Microsoft sign-in...")
-            st.markdown(f"""
-                <meta http-equiv="refresh" content="0; url={flow['auth_uri']}">
-                <p>🔄 Redirecting to Microsoft sign-in...</p>
-                <p>If you're not redirected, <a href="{flow['auth_uri']}">click here</a></p>
-            """, unsafe_allow_html=True)
+            st.redirect(flow['auth_uri'])
         else:
             st.error("Failed to initiate authentication flow")
