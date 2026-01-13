@@ -3,6 +3,7 @@ import streamlit as st
 import pickle
 import base64
 from streamlit.logger import get_logger
+import streamlit.components.v1 as components
 
 logger = get_logger(__name__)
 
@@ -98,22 +99,21 @@ else:
             st.info(f"DEBUG: Created new flow with state={state}")
 
         if "auth_uri" in flow:
-            #st.link_button("Sign in with Microsoft", flow["auth_uri"])
-            # st.link_button("Sign in with Microsoft", flow["auth_uri"])
-            st.markdown(f"""
-                <a href="{flow['auth_uri']}" target="_self" style="
-                    display: inline-block;
+            components.html(f"""
+                <script>
+                    window.top.location.href = "{flow['auth_uri']}";
+                </script>
+                <button onclick="window.top.location.href='{flow['auth_uri']}'" style="
                     padding: 0.5rem 1rem;
                     background-color: #0078d4;
                     color: white;
-                    text-decoration: none;
+                    border: none;
                     border-radius: 4px;
                     cursor: pointer;
                     font-size: 16px;
                     font-weight: 600;
-                    text-align: center;
-                ">Sign in with Microsoft</a>
-            """, unsafe_allow_html=True)
+                ">Sign in with Microsoft</button>
+            """, height=60)
             st.caption("You'll be redirected back here after sign-in.")
         else:
             st.error("Failed to initiate authentication flow")
