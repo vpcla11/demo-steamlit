@@ -99,21 +99,11 @@ else:
             st.info(f"DEBUG: Created new flow with state={state}")
 
         if "auth_uri" in flow:
-            components.html(f"""
+            st.info(" Redirecting to Microsoft sign-in...")
+            st.components.v1.html(f"""
                 <script>
                     window.top.location.href = "{flow['auth_uri']}";
                 </script>
-                <button onclick="window.top.location.href='{flow['auth_uri']}'" style="
-                    padding: 0.5rem 1rem;
-                    background-color: #0078d4;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-size: 16px;
-                    font-weight: 600;
-                ">Sign in with Microsoft</button>
-            """, height=60)
-            st.caption("You'll be redirected back here after sign-in.")
+            """, height=0)
         else:
             st.error("Failed to initiate authentication flow")
