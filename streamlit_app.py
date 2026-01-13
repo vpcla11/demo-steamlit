@@ -11,7 +11,7 @@ CLIENT_ID = "35779d1b-9b8f-48b8-b836-9f6e8e941c8e"
 CLIENT_SECRET = "5sO8Q~WoDDN7DXnCsGoiIeu0XHtT8nOnRuTcOcSe"
 TENANT_ID = "e0fd7f83-50c7-4540-8e09-0dafc1092723"
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-REDIRECT_URI = "https://genaiqa-dgahbbd6h9dbe5bm.westus2-01.azurewebsites.net"
+REDIRECT_URI = "https://my-demo-st.streamlit.app/"
 SCOPES = ["User.Read"]
 
 
