@@ -22,6 +22,10 @@ def build_app():
         client_credential=CLIENT_SECRET
     )
 
+@st.cache_resource
+def get_flow_store():
+    """Process-wide cache for flows (keyed by state)"""
+    return {}
 
 # Encode flow to pass via query param (workaround)
 def encode_flow(flow):
@@ -35,6 +39,7 @@ def decode_flow(encoded):
 st.title("Microsoft Entra ID login")
 
 app = build_app()
+flow_store = get_flow_store()
 
 if "token" in st.session_state:
     token = st.session_state["token"]
@@ -49,10 +54,10 @@ else:
     if "code" in params and "state" in params:
         state = params["state"]
         st.info(f"DEBUG: Processing callback, state={state}")
-        
+
         # Retrieve the original flow from cache using state
         flow = flow_store.pop(state, None)
-        
+
         if not flow:
             st.error("Session expired or invalid. Please sign in again.")
             st.info(f"DEBUG: Flow not found for state={state}")
@@ -63,7 +68,7 @@ else:
             try:
                 st.info(f"DEBUG: Exchanging code for token")
                 result = app.acquire_token_by_auth_code_flow(flow, params.to_dict())
-                
+
                 if "error" in result:
                     st.error(f"Sign-in error: {result.get('error_description')}")
                     st.info(f"DEBUG: Error details: {result}")
@@ -78,7 +83,7 @@ else:
     else:
         # Check if we already created a flow (prevent duplicate creation on rerun)
         pending_state = st.session_state.get("pending_state")
-        
+
         if pending_state and pending_state in flow_store:
             flow = flow_store[pending_state]
             st.info(f"DEBUG: Reusing flow with state={pending_state}")
@@ -86,12 +91,12 @@ else:
             # Create new flow
             flow = app.initiate_auth_code_flow(scopes=SCOPES, redirect_uri=REDIRECT_URI)
             state = flow["state"]
-            
+
             # Store flow in process-wide cache
             flow_store[state] = flow
             st.session_state["pending_state"] = state
             st.info(f"DEBUG: Created new flow with state={state}")
-        
+
         if "auth_uri" in flow:
             st.link_button("Sign in with Microsoft", flow["auth_uri"])
             st.caption("You'll be redirected back here after sign-in.")
