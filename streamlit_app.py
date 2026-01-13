@@ -100,7 +100,7 @@ else:
 
         if "auth_uri" in flow:
             st.info("Click below to sign in with Microsoft:")
-            st.link_button("Sign in with Microsoft", flow['auth_uri'], type="primary")
+            st.link_button("Sign in with Microsoft", flow['auth_uri'])
             st.caption("You'll be redirected back here after authentication.")
         else:
             st.error("Failed to initiate authentication flow")
