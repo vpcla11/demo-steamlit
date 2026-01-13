@@ -98,19 +98,20 @@ else:
             st.info(f"DEBUG: Created new flow with state={state}")
 
         if "auth_uri" in flow:
-            st.markdown(f"""
-                <form action="{flow['auth_uri']}" method="get" target="_self">
-                    <button type="submit" style="
-                        padding: 0.5rem 1rem;
-                        background-color: #0078d4;
-                        color: white;
-                        border: none;
-                        border-radius: 4px;
-                        cursor: pointer;
-                        font-size: 16px;
-                    ">Sign in with Microsoft</button>
-                </form>
-            """, unsafe_allow_html=True)
+            st.link_button("Sign in with Microsoft", flow["auth_uri"])
+            # st.markdown(f"""
+            #     <form action="{flow['auth_uri']}" method="get" target="_self">
+            #         <button type="submit" style="
+            #             padding: 0.5rem 1rem;
+            #             background-color: #0078d4;
+            #             color: white;
+            #             border: none;
+            #             border-radius: 4px;
+            #             cursor: pointer;
+            #             font-size: 16px;
+            #         ">Sign in with Microsoft</button>
+            #     </form>
+            # """, unsafe_allow_html=True)
             st.caption("You'll be redirected back here after sign-in.")
         else:
             st.error("Failed to initiate authentication flow")
