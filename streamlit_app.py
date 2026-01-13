@@ -46,25 +46,54 @@ if "token" in st.session_state:
 else:
     params = st.query_params
     st.info(f"DEBUG: Processing callback with authorization code {st.session_state}")
-    if "code" in params and "flow_data" in params:
-        try:
-            st.info(f"DEBUG: acquire_token_by_auth_code_flow {st.session_state}")
-            flow = decode_flow(params["flow_data"])
-            result = app.acquire_token_by_auth_code_flow(flow, params.to_dict())
-            if "error" in result:
-                st.error(f"Sign-in error: {result.get('error_description')}")
-            else:
-                st.info(f"DEBUG: acquire_token_by_auth_code_flow succes {st.session_state}")
-                st.session_state["token"] = result
+    if "code" in params and "state" in params:
+        state = params["state"]
+        st.info(f"DEBUG: Processing callback, state={state}")
+        
+        # Retrieve the original flow from cache using state
+        flow = flow_store.pop(state, None)
+        
+        if not flow:
+            st.error("Session expired or invalid. Please sign in again.")
+            st.info(f"DEBUG: Flow not found for state={state}")
+            if st.button("Start over"):
                 st.query_params.clear()
                 st.rerun()
-        except Exception as e:
-            st.error(f"Error: {e}")
+        else:
+            try:
+                st.info(f"DEBUG: Exchanging code for token")
+                result = app.acquire_token_by_auth_code_flow(flow, params.to_dict())
+                
+                if "error" in result:
+                    st.error(f"Sign-in error: {result.get('error_description')}")
+                    st.info(f"DEBUG: Error details: {result}")
+                else:
+                    st.info(f"DEBUG: Token acquired successfully")
+                    st.session_state["token"] = result
+                    st.query_params.clear()
+                    st.rerun()
+            except Exception as e:
+                st.error(f"Error: {e}")
+                logger.error(f"Auth error: {e}", exc_info=True)
     else:
-        flow = app.initiate_auth_code_flow(scopes=SCOPES, redirect_uri=REDIRECT_URI)
-        st.info(f"DEBUG: initiate_auth_code_flow {st.session_state}")
+        # Check if we already created a flow (prevent duplicate creation on rerun)
+        pending_state = st.session_state.get("pending_state")
+        
+        if pending_state and pending_state in flow_store:
+            flow = flow_store[pending_state]
+            st.info(f"DEBUG: Reusing flow with state={pending_state}")
+        else:
+            # Create new flow
+            flow = app.initiate_auth_code_flow(scopes=SCOPES, redirect_uri=REDIRECT_URI)
+            state = flow["state"]
+            
+            # Store flow in process-wide cache
+            flow_store[state] = flow
+            st.session_state["pending_state"] = state
+            st.info(f"DEBUG: Created new flow with state={state}")
+        
         if "auth_uri" in flow:
-            # Append encoded flow to auth_uri
-            encoded = encode_flow(flow)
-            auth_url = f"{flow['auth_uri']}&flow_data={encoded}"
-            st.link_button("Sign in with Microsoft", auth_url)
+            st.link_button("Sign in with Microsoft", flow["auth_uri"])
+            st.caption("You'll be redirected back here after sign-in.")
+        else:
+            st.error("Failed to initiate authentication flow")
