@@ -3,7 +3,6 @@ import streamlit as st
 import pickle
 import base64
 from streamlit.logger import get_logger
-import streamlit.components.v1 as components
 
 logger = get_logger(__name__)
 
@@ -14,7 +13,6 @@ AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 REDIRECT_URI = "https://my-demo-st.streamlit.app/"
 SCOPES = ["User.Read"]
 
-
 def build_app():
     return msal.ConfidentialClientApplication(
         client_id=CLIENT_ID,
@@ -22,12 +20,10 @@ def build_app():
         client_credential=CLIENT_SECRET
     )
 
-
 @st.cache_resource
 def get_flow_store():
     """Process-wide cache for flows (keyed by state)"""
     return {}
-
 
 def encode_flow(flow) -> str:
     return base64.urlsafe_b64encode(pickle.dumps(flow)).decode()
@@ -35,7 +31,6 @@ def encode_flow(flow) -> str:
 
 def decode_flow(encoded):
     return pickle.loads(base64.urlsafe_b64decode(encoded))
-
 
 st.title("Microsoft Entra ID login")
 
@@ -56,7 +51,6 @@ else:
         state = params["state"]
         st.info(f"DEBUG: Processing callback, state={state}")
 
-        # Retrieve the original flow from cache using state
         flow = flow_store.pop(state, None)
 
         if not flow:
@@ -82,18 +76,15 @@ else:
                 st.error(f"Error: {e}")
                 logger.error(f"Auth error: {e}", exc_info=True)
     else:
-        # Check if we already created a flow (prevent duplicate creation on rerun)
         pending_state = st.session_state.get("pending_state")
 
         if pending_state and pending_state in flow_store:
             flow = flow_store[pending_state]
             st.info(f"DEBUG: Reusing flow with state={pending_state}")
         else:
-            # Create new flow
             flow = app.initiate_auth_code_flow(scopes=SCOPES, redirect_uri=REDIRECT_URI)
             state = flow["state"]
 
-            # Store flow in process-wide cache
             flow_store[state] = flow
             st.session_state["pending_state"] = state
             st.info(f"DEBUG: Created new flow with state={state}")
