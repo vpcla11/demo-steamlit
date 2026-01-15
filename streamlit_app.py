@@ -1,5 +1,6 @@
 import msal
 import streamlit as st
+import time
 import pickle
 import base64
 from streamlit.logger import get_logger
