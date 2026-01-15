@@ -14,7 +14,7 @@ TENANT_ID = "e0fd7f83-50c7-4540-8e09-0dafc1092723"
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 #REDIRECT_URI = "https://genaiqa-dgahbbd6h9dbe5bm.westus2-01.azurewebsites.net"
 REDIRECT_URI = "https://my-demo-st.streamlit.app/"
-SCOPES = ["User.Read", "offline_access"]
+SCOPES = ["User.Read"]
 
 def build_app():
     return msal.ConfidentialClientApplication(
