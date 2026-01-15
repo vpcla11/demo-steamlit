@@ -37,9 +37,12 @@ def decode_flow(encoded):
 
 def logout_session() -> None:
     logout_url = f"{AUTHORITY}/oauth2/v2.0/logout?post_logout_redirect_uri={REDIRECT_URI}"
-    logger.info("Redirecting to Azure logout")
+    logger.info(f"Redirecting to Azure logout: {logout_url}")
     st.info(f"DEBUG: Redirecting to Azure logout: {logout_url}")
 
+    with st.spinner("Redirecting to Azure logout: {logout_url}"):
+        time.sleep(25)
+        
     st.markdown(
         f"""
                 <meta http-equiv="refresh" content="0;url={logout_url}">
@@ -52,8 +55,8 @@ def logout_session() -> None:
 
 def signout() -> None:
     try:
-        # Debug: Check what tokens are available
-        logger.info(f"DEBUG: Available token keys: {st.session_state['token'].keys()}")
+        logger.info(f"Available token keys: {st.session_state['token'].keys()}")
+        st.info(f"DEBUG: Available token keys: {st.session_state['token'].keys()}")
 
         if "refresh_token" not in st.session_state["token"]:
             logger.warning("No refresh token available, skipping revocation")
@@ -61,7 +64,8 @@ def signout() -> None:
             return
 
         refresh_token = st.session_state["token"]["refresh_token"]
-        logger.info(f"DEBUG: Refresh token length: {len(refresh_token)}")
+        logger.info(f"Refresh token length: {len(refresh_token)}")
+        st.info(f"DEBUG: Refresh token length: {len(refresh_token)}")
 
         revoke_url = f"{AUTHORITY}/oauth2/v2.0/revoke"
         response = requests.post(
