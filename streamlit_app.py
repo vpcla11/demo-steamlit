@@ -1,9 +1,10 @@
-import msal
-import streamlit as st
-import time
-import pickle
-import requests
 import base64
+import pickle
+import time
+
+import msal
+import requests
+import streamlit as st
 from streamlit.logger import get_logger
 
 logger = get_logger(__name__)
@@ -41,10 +42,10 @@ def decode_flow(encoded):
 
 def logout_session() -> None:
     logout_url = f"{AUTHORITY}/oauth2/v2.0/logout?post_logout_redirect_uri={REDIRECT_URI}"
-    logger.info(f"Redirecting to Azure logout: {logout_url}")
-    st.info(f"DEBUG: Redirecting to Azure logout: {logout_url}")
+    logger.info(f"Logout, redirecting to azure logout: {logout_url}")
+    st.info(f"DEBUG: Logout, redirecting to azure logout: {logout_url}")
 
-    with st.spinner("Redirecting to Azure logout: {logout_url}"):
+    with st.spinner("Redirecting to azure logout: {logout_url}"):
         time.sleep(25)
 
     st.markdown(
@@ -56,7 +57,6 @@ def logout_session() -> None:
                 """,
         unsafe_allow_html=True
     )
-    st.rerun()
 
 
 def signout() -> None:
@@ -82,7 +82,8 @@ def signout() -> None:
                 "token": st.session_state["token"]["refresh_token"],
                 "token_type_hint": "refresh_token"
             },
-            headers={"Content-Type": "application/x-www-form-urlencoded"}
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            timeout=10
         )
 
         if response.status_code == 200:
@@ -92,15 +93,14 @@ def signout() -> None:
             logger.error(f"Token revocation response status: {response.status_code}, body: {response.text}")
             st.error(f"DEBUG: Token revocation response: {response.status_code}, body: {response.text}")
 
-    except Exception as e:
-        logger.error(f"Failed to revoke token on Azure Entra ID: {e}", exc_info=True)
-        st.error(f"Failed to revoke token on Azure Entra ID:")
+    except Exception as ex:
+        logger.error(f"Failed to revoke token on Azure Entra ID: {ex}", exc_info=True)
+        st.error(f"Failed to revoke token on Azure Entra ID: {ex}")
     finally:
         logout_session()
 
 
 def cleanup_user_session():
-    global e
     try:
         accounts = app.get_accounts()
         if accounts:
@@ -110,11 +110,11 @@ def cleanup_user_session():
 
             st.session_state.clear()
             st.query_params.clear()
-            st.rerun()
             logger.info("Session state cleared")
             st.info("DEBUG: Session state cleared")
-    except Exception as e:
-        logger.error(f"Failed to clean session: {e}", exc_info=True)
+            st.rerun()
+    except Exception as ex:
+        logger.error(f"Failed to clean session: {ex}", exc_info=True)
         st.error(f"DEBUG: Failed to clean session")
 
 
