@@ -2,6 +2,7 @@ import msal
 import streamlit as st
 import time
 import pickle
+import requests
 import base64
 from streamlit.logger import get_logger
 
@@ -33,6 +34,49 @@ def encode_flow(flow) -> str:
 def decode_flow(encoded):
     return pickle.loads(base64.urlsafe_b64decode(encoded))
 
+def revoke_entra_id_tokens():
+    global response, e
+    try:
+        revoke_url = f"{AUTHORITY}/oauth2/v2.0/revoke"
+        response = requests.post(
+            revoke_url,
+            data={
+                "client_id": CLIENT_ID,
+                "client_secret": CLIENT_SECRET,
+                "token": st.session_state["token"]["refresh_token"],
+                "token_type_hint": "refresh_token"
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"}
+        )
+        if response.status_code == 200:
+            logger.info("Refresh token revoked successfully on Azure Entra ID")
+            st.info("DEBUG: Refresh token revoked successfully on Azure Entra ID")
+        else:
+            logger.error(f"Token revocation response: {response.status_code}")
+            st.error(f"DEBUG: Token revocation response: {response.status_code}")
+    except Exception as e:
+        logger.error(f"Failed to revoke token on Azure Entra ID: {e}", exc_info=True)
+        st.error(f"Failed to revoke token on Azure Entra ID:")
+
+
+def cleanup_user_session():
+    global e
+    try:
+        accounts = app.get_accounts()
+        if accounts:
+            app.remove_account(accounts[0])
+            logger.info("Account removed from MSAL cache")
+            st.info("DEBUG: Account removed from MSAL cache")
+
+            st.session_state.clear()
+            st.query_params.clear()
+            st.rerun()
+            logger.info("Session state cleared")
+            st.info("DEBUG: Session state cleared")
+    except Exception as e:
+        logger.error(f"Failed to clean session: {e}", exc_info=True)
+        st.error(f"DEBUG: Failed to clean session")
+        
 st.title("Microsoft Entra ID login")
 
 app = build_app()
@@ -42,9 +86,9 @@ if "token" in st.session_state:
     token = st.session_state["token"]
     st.success(f"Welcome, {token['id_token_claims'].get('name')}")
     if st.button("Sign out"):
-        st.session_state.clear()
-        st.query_params.clear()
-        st.rerun()
+        if "refresh_token" in st.session_state["token"]:
+            revoke_entra_id_tokens()
+        cleanup_user_session()
 else:
     params = st.query_params
     st.info(f"DEBUG: Processing callback with authorization code {st.session_state}")
