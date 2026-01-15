@@ -12,9 +12,10 @@ CLIENT_ID = "35779d1b-9b8f-48b8-b836-9f6e8e941c8e"
 CLIENT_SECRET = "5sO8Q~WoDDN7DXnCsGoiIeu0XHtT8nOnRuTcOcSe"
 TENANT_ID = "e0fd7f83-50c7-4540-8e09-0dafc1092723"
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-#REDIRECT_URI = "https://genaiqa-dgahbbd6h9dbe5bm.westus2-01.azurewebsites.net"
+# REDIRECT_URI = "https://genaiqa-dgahbbd6h9dbe5bm.westus2-01.azurewebsites.net"
 REDIRECT_URI = "https://my-demo-st.streamlit.app/"
 SCOPES = ["User.Read"]
+
 
 def build_app():
     return msal.ConfidentialClientApplication(
@@ -23,10 +24,12 @@ def build_app():
         client_credential=CLIENT_SECRET
     )
 
+
 @st.cache_resource
 def get_flow_store():
     """Process-wide cache for flows (keyed by state)"""
     return {}
+
 
 def encode_flow(flow) -> str:
     return base64.urlsafe_b64encode(pickle.dumps(flow)).decode()
@@ -34,6 +37,7 @@ def encode_flow(flow) -> str:
 
 def decode_flow(encoded):
     return pickle.loads(base64.urlsafe_b64decode(encoded))
+
 
 def logout_session() -> None:
     logout_url = f"{AUTHORITY}/oauth2/v2.0/logout?post_logout_redirect_uri={REDIRECT_URI}"
@@ -53,6 +57,7 @@ def logout_session() -> None:
         unsafe_allow_html=True
     )
     st.rerun()
+
 
 def signout() -> None:
     try:
@@ -93,6 +98,7 @@ def signout() -> None:
     finally:
         logout_session()
 
+
 def cleanup_user_session():
     global e
     try:
@@ -110,6 +116,7 @@ def cleanup_user_session():
     except Exception as e:
         logger.error(f"Failed to clean session: {e}", exc_info=True)
         st.error(f"DEBUG: Failed to clean session")
+
 
 st.title("Microsoft Entra ID login")
 
