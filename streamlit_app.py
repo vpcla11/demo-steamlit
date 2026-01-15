@@ -42,7 +42,7 @@ def logout_session() -> None:
 
     with st.spinner("Redirecting to Azure logout: {logout_url}"):
         time.sleep(25)
-        
+
     st.markdown(
         f"""
                 <meta http-equiv="refresh" content="0;url={logout_url}">
@@ -52,6 +52,7 @@ def logout_session() -> None:
                 """,
         unsafe_allow_html=True
     )
+    st.rerun()
 
 def signout() -> None:
     try:
