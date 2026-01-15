@@ -69,6 +69,8 @@ else:
                     st.info(f"DEBUG: Error details: {result}")
                 else:
                     st.info(f"DEBUG: Token acquired successfully {result}")
+                    with st.spinner("DEBUG Please wait..."):
+                        time.sleep(5)
                     st.session_state["token"] = result
                     st.query_params.clear()
                     st.rerun()
