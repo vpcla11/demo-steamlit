@@ -46,7 +46,7 @@ def logout_session() -> None:
     st.info(f"DEBUG: Logout, redirecting to azure logout: {logout_url}")
 
     with st.spinner("Redirecting to azure logout: {logout_url}"):
-        time.sleep(25)
+        time.sleep(7)
 
     st.markdown(
         f"""
