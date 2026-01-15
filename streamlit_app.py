@@ -12,8 +12,9 @@ CLIENT_ID = "35779d1b-9b8f-48b8-b836-9f6e8e941c8e"
 CLIENT_SECRET = "5sO8Q~WoDDN7DXnCsGoiIeu0XHtT8nOnRuTcOcSe"
 TENANT_ID = "e0fd7f83-50c7-4540-8e09-0dafc1092723"
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
+#REDIRECT_URI = "https://genaiqa-dgahbbd6h9dbe5bm.westus2-01.azurewebsites.net"
 REDIRECT_URI = "https://my-demo-st.streamlit.app/"
-SCOPES = ["User.Read"]
+SCOPES = ["User.Read", "offline_access"]
 
 def build_app():
     return msal.ConfidentialClientApplication(
@@ -34,9 +35,34 @@ def encode_flow(flow) -> str:
 def decode_flow(encoded):
     return pickle.loads(base64.urlsafe_b64decode(encoded))
 
-def revoke_entra_id_tokens():
-    global response, e
+def logout_session() -> None:
+    logout_url = f"{AUTHORITY}/oauth2/v2.0/logout?post_logout_redirect_uri={REDIRECT_URI}"
+    logger.info("Redirecting to Azure logout")
+    st.info(f"DEBUG: Redirecting to Azure logout: {logout_url}")
+
+    st.markdown(
+        f"""
+                <meta http-equiv="refresh" content="0;url={logout_url}">
+                <script>
+                    window.location.href = "{logout_url}";
+                </script>
+                """,
+        unsafe_allow_html=True
+    )
+
+def signout() -> None:
     try:
+        # Debug: Check what tokens are available
+        logger.info(f"DEBUG: Available token keys: {st.session_state['token'].keys()}")
+
+        if "refresh_token" not in st.session_state["token"]:
+            logger.warning("No refresh token available, skipping revocation")
+            st.warning("DEBUG: No refresh token to revoke")
+            return
+
+        refresh_token = st.session_state["token"]["refresh_token"]
+        logger.info(f"DEBUG: Refresh token length: {len(refresh_token)}")
+
         revoke_url = f"{AUTHORITY}/oauth2/v2.0/revoke"
         response = requests.post(
             revoke_url,
@@ -48,16 +74,19 @@ def revoke_entra_id_tokens():
             },
             headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
+
         if response.status_code == 200:
             logger.info("Refresh token revoked successfully on Azure Entra ID")
             st.info("DEBUG: Refresh token revoked successfully on Azure Entra ID")
         else:
-            logger.error(f"Token revocation response: {response.status_code}")
-            st.error(f"DEBUG: Token revocation response: {response.status_code}")
+            logger.error(f"Token revocation response status: {response.status_code}, body: {response.text}")
+            st.error(f"DEBUG: Token revocation response: {response.status_code}, body: {response.text}")
+
     except Exception as e:
         logger.error(f"Failed to revoke token on Azure Entra ID: {e}", exc_info=True)
         st.error(f"Failed to revoke token on Azure Entra ID:")
-
+    finally:
+        logout_session()
 
 def cleanup_user_session():
     global e
@@ -76,7 +105,7 @@ def cleanup_user_session():
     except Exception as e:
         logger.error(f"Failed to clean session: {e}", exc_info=True)
         st.error(f"DEBUG: Failed to clean session")
-        
+
 st.title("Microsoft Entra ID login")
 
 app = build_app()
@@ -87,7 +116,7 @@ if "token" in st.session_state:
     st.success(f"Welcome, {token['id_token_claims'].get('name')}")
     if st.button("Sign out"):
         if "refresh_token" in st.session_state["token"]:
-            revoke_entra_id_tokens()
+            signout()
         cleanup_user_session()
 else:
     params = st.query_params
